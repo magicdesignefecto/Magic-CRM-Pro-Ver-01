@@ -562,7 +562,15 @@ export const DashboardModule = {
                         <div class="stat-icon"><i class="fas fa-briefcase"></i></div>
                         <div class="stat-label">Proyectos</div>
                         <div class="stat-value">${stats.projects || 0}</div>
-                        <div class="stat-subtitle">Activos</div>
+                        <div class="stat-subtitle">${(() => {
+                    const s = stats.projectsByStatus || {};
+                    const parts = [];
+                    if (s.activos) parts.push(s.activos + ' Activo' + (s.activos > 1 ? 's' : ''));
+                    if (s.finalizados) parts.push(s.finalizados + ' Finalizado' + (s.finalizados > 1 ? 's' : ''));
+                    if (s.borradores) parts.push(s.borradores + ' Borrador' + (s.borradores > 1 ? 'es' : ''));
+                    if (s.revision) parts.push(s.revision + ' Rev. Pago');
+                    return parts.length ? parts.join(' · ') : 'Sin proyectos';
+                })()}</div>
                     </div>
 
                     <div class="stat-card green">
@@ -622,14 +630,14 @@ export const DashboardModule = {
                         </h3>
                         <div class="goals-list">
                             ${goalsProgress.length > 0 ? goalsProgress.map(goal => {
-                const pClass = goal.percent < 40 ? 'low' : goal.percent < 75 ? 'mid' : 'high';
-                const currentVal = goal.type === 'leads'
-                    ? goal.current
-                    : Formatters.toCurrency(goal.current, goal.currency || 'BOB');
-                const targetVal = goal.type === 'leads'
-                    ? goal.target
-                    : Formatters.toCurrency(goal.target, goal.currency || 'BOB');
-                return `
+                    const pClass = goal.percent < 40 ? 'low' : goal.percent < 75 ? 'mid' : 'high';
+                    const currentVal = goal.type === 'leads'
+                        ? goal.current
+                        : Formatters.toCurrency(goal.current, goal.currency || 'BOB');
+                    const targetVal = goal.type === 'leads'
+                        ? goal.target
+                        : Formatters.toCurrency(goal.target, goal.currency || 'BOB');
+                    return `
                                     <div class="goal-item">
                                         <div class="goal-header">
                                             <span class="goal-name">${goal.name || 'Meta'}</span>
@@ -644,7 +652,7 @@ export const DashboardModule = {
                                         </div>
                                     </div>
                                 `;
-            }).join('') : `
+                }).join('') : `
                                 <div class="empty-state">
                                     <i class="fas fa-flag-checkered"></i>
                                     <p>Sin metas configuradas</p>
