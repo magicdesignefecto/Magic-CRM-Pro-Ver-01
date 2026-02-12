@@ -1,0 +1,159 @@
+import { AuthService } from './services/auth.service.js';
+import { Layout } from './components/Layout.js';
+import { db } from './core/firebase-config.js';
+import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// Módulos
+import { LoginModule } from './modules/login.js';
+import { DashboardModule } from './modules/dashboard.js';
+import { LeadsModule } from './modules/leads.js';
+import { ClientsModule } from './modules/clients.js';
+import { PipelineModule } from './modules/pipeline.js';
+import { QuotesModule } from './modules/quotes.js';
+import { ProjectsModule } from './modules/projects.js';
+import { CalendarModule } from './modules/calendar.js';
+import { ReportsModule } from './modules/reports.js';
+import { GoalsModule } from './modules/goals.js';
+import { SettingsModule } from './modules/settings.js';
+
+const routes = {
+    '/': DashboardModule,
+    '/dashboard': DashboardModule,
+    '/leads': LeadsModule,
+    '/clients': ClientsModule,
+    '/pipeline': PipelineModule,
+    '/quotes': QuotesModule,
+    '/projects': ProjectsModule,
+    '/calendar': CalendarModule,
+    '/reports': ReportsModule,
+    '/goals': GoalsModule,
+    '/settings': SettingsModule
+};
+
+let currentModule = null;
+let isRouting = false;
+
+const router = async () => {
+    // Guardia contra ejecuciones simultáneas
+    if (isRouting) return;
+    isRouting = true;
+
+    const contentDiv = document.getElementById('app');
+    let path = window.location.hash.replace('#', '') || '/';
+    if (path === '') path = '/';
+
+    console.log("📍 Navegando a:", path);
+
+    // Limpiar módulo anterior
+    if (currentModule && currentModule.destroy) {
+        currentModule.destroy();
+    }
+
+    if (path === '/login' || path === '/register') {
+        currentModule = LoginModule;
+        contentDiv.innerHTML = await LoginModule.render();
+        if (LoginModule.init) await LoginModule.init();
+        isRouting = false;
+        return;
+    }
+
+    const module = routes[path] || DashboardModule;
+
+    try {
+        const moduleContent = await module.render();
+        const pageTitle = path.replace('/', '').toUpperCase() || 'DASHBOARD';
+        contentDiv.innerHTML = Layout.render(moduleContent, pageTitle);
+        if (Layout.init) await Layout.init();
+        if (module.init) await module.init();
+        currentModule = module;
+    } catch (error) {
+        console.error("❌ Error cargando módulo:", error);
+        contentDiv.innerHTML = `<div style="padding:20px; text-align:center;"><h2>Error cargando la página</h2><p>${error.message}</p></div>`;
+        currentModule = null;
+    }
+
+    isRouting = false;
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    console.log("🚀 Iniciando Magic CRM...");
+
+    // ========== APLICAR TEMA GUARDADO AL INICIO ==========
+    const savedTheme = localStorage.getItem('crm-theme') || 'light';
+    document.body.classList.remove('theme-light', 'theme-dark');
+    document.body.classList.add(`theme-${savedTheme}`);
+    console.log("🎨 Tema aplicado:", savedTheme);
+
+    AuthService.onAuthStateChanged(async (user) => {
+        if (user) {
+            console.log("✅ Usuario detectado:", user.email);
+
+            try {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+
+                if (userDoc.exists()) {
+                    const userData = userDoc.data();
+
+                    if (userData.status === 'pending') {
+                        console.warn("⛔ Usuario PENDIENTE detectado.");
+
+                        // --- SOLUCIÓN AL CONFLICTO DE ALERTAS ---
+                        const isAlertOpen = document.querySelector('.swal2-container');
+                        const isRegisterFlow = window.isRegisterFlow === true;
+
+                        // Si es flujo de registro, esperar a que el SweetAlert del registro termine
+                        if (isRegisterFlow) {
+                            console.log("📝 Flujo de registro detectado, esperando mensaje...");
+                            window.isRegisterFlow = false;
+
+                            // Esperar 5 segundos para que el usuario vea el mensaje de éxito
+                            await new Promise(r => setTimeout(r, 5000));
+
+                            // Ahora sí cerrar sesión
+                            await AuthService.logout();
+                            window.location.hash = '#/login';
+                            return;
+                        }
+
+                        // Si NO es flujo de registro, mostrar alerta azul normal
+                        if (!isAlertOpen) {
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    icon: 'info',
+                                    title: 'Cuenta en Revisión',
+                                    text: 'Tu solicitud ha sido recibida pero aún no ha sido aprobada por el administrador.',
+                                    confirmButtonColor: '#2563EB'
+                                });
+                            } else {
+                                alert("Cuenta en revisión.");
+                            }
+                        }
+
+                        // Cerramos sesión
+                        await AuthService.logout();
+                        window.location.hash = '#/login';
+                        return;
+                    }
+                }
+            } catch (error) {
+                console.error("Error verificando estado:", error);
+            }
+
+            if (window.location.hash === '#/login' || window.location.hash === '' || !window.location.hash) {
+                window.location.hash = '#/dashboard';
+            }
+            router();
+
+        } else {
+            console.log("⚠️ No hay sesión, redirigiendo a Login");
+            if (window.location.hash !== '#/register') {
+                window.location.hash = '#/login';
+            }
+            router();
+        }
+    });
+
+    // Solo hashchange — popstate no es necesario para hash routing y causa doble ejecución
+    window.addEventListener('hashchange', router);
+});
+
