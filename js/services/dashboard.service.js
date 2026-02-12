@@ -58,7 +58,10 @@ export const DashboardService = {
                 const projectsColl = collection(db, "projects");
                 const qProjects = query(projectsColl, where("userId", "==", user.uid));
                 promises.push(
-                    getCountFromServer(qProjects).then(snap => ({ type: 'projects', count: snap.data().count })).catch(() => ({ type: 'projects', count: 0 }))
+                    getDocs(qProjects).then(snap => ({
+                        type: 'projects',
+                        data: snap.docs.map(d => d.data())
+                    })).catch(() => ({ type: 'projects', data: [] }))
                 );
             }
 
@@ -90,17 +93,25 @@ export const DashboardService = {
             // Procesar resultados
             let totalClients = clients ? clients.length : 0;
             let allLeads = leads || [];
-            let totalProjects = projects ? projects.length : 0;
+            let allProjects = projects || [];
             let allQuotes = quotes || [];
             let allGoals = goals || [];
 
             results.forEach(r => {
                 if (r.type === 'clients') totalClients = r.count;
                 if (r.type === 'leads') allLeads = r.data;
-                if (r.type === 'projects') totalProjects = r.count;
+                if (r.type === 'projects') allProjects = r.data || [];
                 if (r.type === 'quotes') allQuotes = r.data;
                 if (r.type === 'goals') allGoals = r.data;
             });
+
+            const totalProjects = allProjects.length;
+            const projectsByStatus = {
+                activos: allProjects.filter(p => p.status === 'Activo').length,
+                finalizados: allProjects.filter(p => p.status === 'Finalizado').length,
+                borradores: allProjects.filter(p => p.status === 'Borrador').length,
+                revision: allProjects.filter(p => p.status === 'Revisión Pago').length
+            };
 
             // ========== CALCULAR ESTADÍSTICAS ==========
 
@@ -168,6 +179,7 @@ export const DashboardService = {
                     clients: totalClients,
                     leads: totalLeads,
                     projects: totalProjects,
+                    projectsByStatus: projectsByStatus,
                     revenue: revenue,
                     goalsCompleted: goalsCompleted,
                     pendingActions: pendingActions
