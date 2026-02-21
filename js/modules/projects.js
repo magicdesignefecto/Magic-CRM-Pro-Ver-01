@@ -50,12 +50,13 @@ export const ProjectsModule = {
                 .project-status.activo { background: rgba(59,130,246,0.15); color: #3B82F6; }
                 .project-status.finalizado { background: rgba(16,185,129,0.15); color: #10B981; }
 
-                .project-meta { display: flex; gap: 16px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); }
-                .meta-item { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-muted); }
+                .project-meta { display: flex; gap: 16px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; }
+                .meta-item { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; }
 
-                .project-finance { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg-body); border-radius: 10px; margin-bottom: 12px; }
-                .finance-label { font-size: 0.75rem; color: var(--text-muted); }
-                .finance-value { font-size: 1.1rem; font-weight: 700; }
+                .project-finance { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: var(--bg-body); border-radius: 10px; margin-bottom: 12px; gap: 8px; overflow: visible; }
+                .project-finance > div { min-width: 0; flex-shrink: 1; }
+                .finance-label { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+                .finance-value { font-size: 1.1rem; font-weight: 700; white-space: nowrap; }
                 .finance-value.positive { color: #10B981; }
                 .finance-value.negative { color: #EF4444; }
 
@@ -70,7 +71,10 @@ export const ProjectsModule = {
                 .form-section-title { font-weight: 700; font-size: 0.85rem; color: var(--text-main); margin-bottom: 12px; }
                 .form-group { margin-bottom: 12px; }
                 .form-label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; display: block; }
-                .form-input, .form-select { width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.9rem; background: var(--bg-input); color: var(--text-main); box-sizing: border-box; }
+                .form-input, .form-select { width: 100%; padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 8px; font-size: 0.9rem; background: var(--bg-input); color: var(--text-main); box-sizing: border-box; color-scheme: auto; }
+                input[type="date"].form-input { color: var(--text-main); }
+                input[type="date"].form-input::-webkit-datetime-edit { color: var(--text-main); }
+                input[type="date"].form-input::-webkit-calendar-picker-indicator { opacity: 0.7; cursor: pointer; }
                 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: end; }
 
                 /* Services Dropdown */
@@ -100,9 +104,10 @@ export const ProjectsModule = {
                 .task-text.completed { text-decoration: line-through; color: var(--text-muted); }
                 .task-delete { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; }
                 .task-delete:hover { color: #EF4444; }
-                .add-task-row { display: flex; gap: 8px; margin-top: 12px; }
+                .add-task-row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
                 .add-task-row input { flex: 1; }
-                .btn-add-task { padding: 10px 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
+                .add-task-row input[type="date"] { min-width: 140px; color: var(--text-main); }
+                .btn-add-task { padding: 10px 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; white-space: nowrap; }
 
                 /* Finance Section */
                 .finance-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
@@ -153,6 +158,11 @@ export const ProjectsModule = {
                     .finance-summary { grid-template-columns: 1fr; }
                     .add-payment-form { grid-template-columns: 1fr; }
                     .kpi-grid { grid-template-columns: 1fr; }
+                    .project-finance { flex-wrap: wrap; gap: 8px; }
+                    .project-finance > div { min-width: auto; flex-shrink: 0; }
+                    .finance-value { font-size: 1rem; }
+                    .add-task-row { flex-direction: column; }
+                    .add-task-row input[type="date"] { width: 100%; }
                 }
             </style>
 
