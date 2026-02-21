@@ -608,7 +608,7 @@ export const ProjectsModule = {
                 </div>
                 <div class="add-task-row" style="flex-wrap: wrap;">
                     <input type="text" class="form-input" id="newTaskInput" placeholder="Descripción de la tarea..." style="flex: 2; min-width: 150px;">
-                    <input type="date" class="form-input" id="newTaskDueDate" style="flex: 1; min-width: 120px;">
+                    <input type="date" class="form-input" id="newTaskDueDate" style="flex: 1; min-width: 160px; color: #111827;">
                     <button class="btn-add-task" id="btnAddTask"><i class="fas fa-plus"></i> Agregar</button>
                 </div>
             </div>
